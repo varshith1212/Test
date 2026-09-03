@@ -1,0 +1,37 @@
+name: GCP Keyless Auth Demo
+ 
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+ 
+permissions:
+  contents: read
+  id-token: write        # required — this is what lets GitHub mint the OIDC token
+ 
+jobs:
+  auth-to-gcp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - name: Debug repo context
+        run: echo "github.repository = ${{ github.repository }}"
+ 
+      - id: auth
+        name: Authenticate to Google Cloud (no key file!)
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: service-team3-octave
+          workload_identity_provider: projects/790874708047/locations/global/workloadIdentityPools/github-pool-varshith/providers/github-provider-varshith
+          service_account: github-deployer-varshith@service-team3-octave.iam.gserviceaccount.com
+ 
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+ 
+      - name: Verify keyless authentication
+        run: |
+          echo "Authenticated as:"
+          gcloud auth list --format="value(account)"
+          echo "Project details:"
+          gcloud projects describe service-team3-octave --format="value(name,projectId)"
